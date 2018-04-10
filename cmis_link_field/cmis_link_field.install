@@ -1,0 +1,47 @@
+<?php
+/**
+ * Implements hook_install()
+ */
+ 
+ function cmis_link_field_install(){
+ }
+ 
+ /**
+  * Implements hook_uninstall()
+  */
+ function cmis_link_field_uninstall(){
+ }
+ 
+ /**
+  * Implementation of hook_field_schema().
+  */ 
+ function cmis_link_field_field_schema($field){
+    if ($field['type'] == 'cmis_link_field') {
+        $schema['columns']['breadcrumbs'] = array(
+        'type' => 'text',
+        'size' => 'big', 
+        'not null' => FALSE, 
+        ); 
+        $schema['columns']['display_name'] = array(
+        'type' => 'varchar', 
+        'length' => '255', 
+        'not null' => FALSE, 
+        );
+        $schema['columns']['document_link'] = array(
+        'type' => 'varchar', 
+        'length' => '255', 
+        'not null' => FALSE, 
+        ); 
+        $schema['columns']['document_path'] = array(
+        'type' => 'varchar', 
+        'length' => '255', 
+        'not null' => FALSE, 
+        ); 
+        $schema['indexes'] = array(
+        'display_name' => array('display_name'),
+        'document_link' => array('document_link'),
+        'document_path' => array('document_path'), 
+        ); 
+        return $schema; 
+    }
+}

@@ -1,0 +1,156 @@
+<?php 
+
+/**
+ * Implementaion of hook_field_info().
+ */
+
+function cmis_link_field_field_info(){
+	return array(
+		'cmis_link_field'	 => array(
+			'label' => t('Library Link (CMIS LINK)'),
+			'description' => t('CMIS Library Link Field'),
+			'default_widget' => 'cmis_link_field_form',
+			'default_formatter' => 'cmis_link_field_default',
+		 ), 
+	);
+}
+
+/**
+ * Implementation of hook_field_is_empty().
+ * @param unknown $item
+ * @param unknown $field
+ */
+function cmis_link_field_field_is_empty($item,$field){
+	if($field['type'] == 'cmis_link_field'){
+		if(empty($item['breadcrumbs']) && empty($item['display_name']) && empty($item['document_path']) && empty($item['document_link'])){
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+/**
+ * Implements hook_field_widget_info().
+ */
+function cmis_link_field_field_widget_info(){
+	return array(
+	    'cmis_link_field_form' => array(
+		    'label' => t('Library Link Form'),
+			'field types' => array('cmis_link_field'),
+			'behaviors' => array(
+			    'multiple values' => FIELD_BEHAVIOR_DEFAULT,
+			    'default value' => FIELD_BEHAVIOR_DEFAULT,
+			),
+	    ),
+	);
+}
+
+/**
+ * Implementaion of hook_field_widget_form().
+ */
+function cmis_link_field_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+    $base = $element;
+    if($instance['widget']['type'] == 'cmis_link_field_form'){
+    	$form['#attached']['css'][] = drupal_get_path('module','cmis_link_field').'/css/cmis_link_field.css';
+    	$form['#attached']['js'][] = drupal_get_path('module', 'cmis_link_field') .'/scripts/updateLinkField.js';
+    	
+    	$widget = $instance['widget'];
+    	$settings = $widget['settings'];
+    	if ($field['cardinality'] == 1) {
+    		$element['#type'] = 'fieldset';
+    	}
+    	$required = $instance['required'];
+    	$element['#required'] = $required == 1 ? TRUE : FALSE;
+    	$element['breadcrumbs'] = array(
+    		'#type' => 'textarea',
+    		'#title'=> t('CMIS Link Breadcrumbs'),
+    		'#default_value' => isset($items[$delta]['breadcrumbs']) ? $items[$delta]['breadcrumbs'] : NULL,
+    		'#attributes' => array('id' => "cmis-link-field-breadcrumbs"),
+    	    '#prefix' => '<div class="cmis-link-field-breadcrumbs">',
+    		'#suffix' => '</div>',
+    	);
+    	$element['display_name'] = array(
+    			'#prefix' => isset($items[$delta]['breadcrumbs']) ? $items[$delta]['breadcrumbs'] : '<div id="library-breadcrumbs"></div>', // Add markup before form item
+    			'#type' => 'textfield',
+    			'#title'=> t('Display Name'),
+    			'#default_value' => isset($items[$delta]['display_name']) ? $items[$delta]['display_name'] : NULL,
+    			'#required' => $required == 1 ? TRUE : FALSE,
+    			'#attributes' => array('id' => "cmis-link-field-display-name"),
+    			'#maxlength' => 255,
+    	);
+    	$element['document_link'] = array(
+    			'#type' => 'textfield',
+    			'#title'=> t('Document Link'),
+    			'#default_value' => isset($items[$delta]['document_link']) ? $items[$delta]['document_link'] : NULL,
+    			'#attributes' => array('id' => "cmis-link-field-document-link"),
+    			'#maxlength' => 255,
+    			'#prefix' => '<div class="cmis-link-field-document-link">',
+    			'#suffix' => '</div>',
+    	);
+    	$element['document_path'] = array(
+    			'#type' => 'textfield',
+    			'#title'=> t('Document Path'),
+    			'#default_value' => isset($items[$delta]['document_path']) ? $items[$delta]['document_path'] : NULL,
+    			'#attributes' => array('id' => "cmis-link-field-document-path"),
+    			'#maxlength' => 255,
+    			'#prefix' => '<div class="cmis-link-field-document-path">',
+    			'#suffix' => '</div>',
+    	);
+    	$document_path = isset($items[$delta]['document_path']) ? $items[$delta]['document_path'] : "#";
+    	$button = '<a href="'.$document_path.'" class="cmis_link_field_browse_button" id="cmis-link-field-browse-button"><button type="button">'. t('Browse Library') .'</button></a>';
+    	$element['cmis_link_field_button'] = array(
+    			'#markup' => $button,
+    	);
+    }
+    return $element;
+}
+/**
+ * Implements hook_field_formatter_info().
+ */
+function cmis_link_field_field_formatter_info(){
+	return array(
+	    'cmis_link_field_default' => array(
+	        'label' => t('Default'),
+	    	'field types' => array('cmis_link_field'),
+	    ),
+	);
+}
+function cmis_link_field_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display){
+	$element = array();
+	switch($display['type']){
+		case 'cmis_link_field_default':
+			foreach ($items as $delta => $item){
+				$element[$delta]['#markup'] = theme('cmis_link_field_formatter_default', $item);
+			}
+			break;
+	}
+	return $element;
+}
+function cmis_link_field_theme($existing, $type, $theme, $path) {
+	return array(
+			'cmis_link_field_formatter_default' => array(
+					'variables' => array('item' => NULL),
+			),
+	);
+}
+
+
+function theme_cmis_link_field_formatter_default($item) {
+	$output = '';
+	$output .= '<div class="cmis-link-field-wrapper">';
+	$output .= '<a href="'.$item['document_link'].'">'.$item['display_name'].'</a>';
+	$output .= '</div>';
+
+	return $output;
+}
+
+/**
+ * Implementation of hook_field_settings_form().
+ */
+function cmis_link_field_field_settings_form($field, $instance, $has_data) {
+	if ($field['type'] == 'cmis_link_field') {
+		$settings = $field['settings'];
+		$form = array();
+		return $form;
+	}
+}

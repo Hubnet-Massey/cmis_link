@@ -1,0 +1,6 @@
+name = CMIS Link CKEditor
+description = CKEditor dialog plugin to add CMIS link
+core = 7.x
+package = CMIS Link
+dependencies[] = cmis_link
+dependencies[] = ckeditor

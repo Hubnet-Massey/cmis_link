@@ -1,0 +1,6 @@
+name = CMIS Link
+description = Allows authenticated users to browse the a CMIS link repository tree
+core = 7.x
+package = CMIS Link
+dependencies[] = cmis
+dependencies[] = cmis_browser

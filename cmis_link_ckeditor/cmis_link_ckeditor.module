@@ -1,0 +1,62 @@
+<?php
+/**
+ * 
+ * 
+ * 
+ * 
+ */
+
+/**
+ * Implementation of hook_ckeditor_plugin().
+ */
+function cmis_link_ckeditor_ckeditor_plugin() {
+	$module_path = drupal_get_path('module', 'cmis_link_ckeditor');
+	$plugins = array();
+	$plugins['cmis_link_ckeditor'] = array(
+			'name' => 'cmis_link_ckeditor',
+			'desc' => t('CMIS Link File Browser'),
+			'path' => $module_path.'/plugins/browser/',
+	);
+	return $plugins;
+}
+
+/**
+ * Implementation of hook_element_info_alter().
+ */
+function cmis_link_ckeditor_element_info_alter(&$type) {
+	if(user_access('access cmis link')) {
+		$type['text_format']['#pre_render'][] = 'cmis_link_ckeditor_text_format_pre_render';
+		$type['text_format']['#post_render'][] = 'cmis_link_ckeditor_text_format_post_render';
+	}
+}
+
+function cmis_link_ckeditor_text_format_pre_render($element) {
+	_cmis_link_ckeditor_has_text_format(TRUE);
+	return $element;
+}
+
+function _cmis_link_ckeditor_has_text_format($set_text = FALSE) {
+	static $has_text = FALSE;
+	if(!$set_text) {
+		return $has_text;
+	}
+	$has_text = TRUE;
+}
+
+function cmis_link_ckeditor_text_format_post_render($content,$element) {
+	static $added;
+	if(!isset($added) && _cmis_link_ckeditor_has_text_format() && ($js = drupal_add_js()) && isset($js['settings']['data'])) {
+		$settings = call_user_func_array('array_merge_recursive',$js['settings']['data']);
+		if (isset($settings['ckeditor'])) {
+			$added = TRUE;
+			drupal_add_js(array('cmis_link_ckeditor' => array(
+					'link_type_name' => t('Library Link'),
+					'button_name' => t('Browse Library'),
+					'linkURL_name' => t('Link URL'),
+					'textarea_name' => t('Document Name'),
+					'has_permissions' => 'true',
+			)),'setting');
+		}
+	}
+	return $content;
+}

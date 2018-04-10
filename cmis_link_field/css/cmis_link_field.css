@@ -1,0 +1,31 @@
+.field-type-cmis-link-field .cmis_link_field_browse_button button {
+	color: #fff;
+    background-color: #3468AD;
+    border-color: #2C4F8F;
+    padding: 3px 7px;
+    font-size: 14px;
+    font-weight: 400;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    background-image: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+.field-type-cmis-link-field .cmis_link_field_browse_button button:hover,
+.field-type-cmis-link-field .cmis_link_field_browse_button button:visited,
+.field-type-cmis-link-field .cmis_link_field_browse_button button:active{
+    background-color: #2C4F8F;	
+}
+.cmis-link-field-breadcrumbs,
+.cmis-link-field-document-link,
+.cmis-link-field-document-path{
+    visibility:    hidden;
+    position:      absolute;
+}
+#cmis-link-breadcrumb{
+    float:       left;	
+}
+.field-type-cmis-link-field .form-type-textfield{
+	display:     inline-block;
+}

@@ -1,0 +1,5 @@
+name = CMIS Link Field
+description = Defines a CMIS link field type
+core = 7.x
+package = CMIS Link
+dependencies[] = cmis_link

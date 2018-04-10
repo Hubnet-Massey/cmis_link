@@ -1,0 +1,169 @@
+<?php
+/**
+ * 
+ * 
+ * 
+ * 
+ */
+
+/**
+ * Implementation of hook_menu().
+ */
+function cmis_link_menu() {
+	
+	$items = array();
+	$items['cmis_link/browser'] = array(
+			'type' => MENU_NORMAL_ITEM,
+			'title' => t('CMIS File Browser'),
+			'page callback' => 'cmis_link_content_get',
+			'file' => 'cmis_link.content_get.inc',
+			'access callback' => 'user_access',
+			'access arguments' => array('access cmis link'),
+	);
+	$items['cmis_link/document/commit'] = array(
+			'type' => MENU_CALLBACK,
+			'page callback' => '_cmis_link_document_commit',
+			'access callback' => 'user_access',
+			'access arguments' => array('access cmis link'),
+	);
+	$items['cmis_link/document/select'] = array(
+			'type' => MENU_CALLBACK,
+			'page callback' => '_cmis_link_document_select',
+			'page arguments' => array(3),
+			'access callback' => 'user_access',
+			'access arguments' => array('access cmis link'),
+	);
+
+	return $items;
+}
+
+/**
+ * 
+ * Implementation of hook_theme().
+ */
+function cmis_link_theme() {
+	return array(
+			'cmis_link' => array(
+					'template' => 'browser',
+					'path' => drupal_get_path('module','cmis_link').'/templates',
+					'arguments' => array('context' => NULL),
+			),
+			'cmis_link_browse_children' => array(
+					'arguments' => array('context' => NULL),
+					'file' => 'cmis_link.theme.inc',
+			),
+			'cmis_link_browse_breadcrumb' => array(
+					'arguments' => array('bcarray' => NULL),
+					'file' => 'cmis_link.theme.inc',
+			),
+			'cmis_link_document_confirm' => array(
+					'arguments' => array('context' => NULL),
+					'file' => 'cmis_link.theme.inc',
+			),
+			'cmis_link_folder_unavailable' =>array(
+					'arguments' => array('context' => NULL),
+					'file' => 'cmis_link.theme.inc',
+			),
+			'cmis_link_document_upload' => array(    // this is currently not used
+					'arguments' => array('context' => NULL),
+					'file' => 'cmis_link.theme.inc',
+			),
+	);
+}
+
+/**
+ * 
+ * Implementation of hook_permission().
+ */
+function cmis_link_permission() {
+	$permissions = array(
+			'access cmis link' => array('title' => 'Access CMIS Link File Browser', 'description' => 'Access the CMIS Link File Browser'),
+	);
+	return $permissions;
+}
+
+function _cmis_link_document_commit() {
+	//Note: function not currently called
+	error_log('_cmis_link_document_commit');
+	
+	if(!isset($_SESSION['cmis_link'])){
+		$_SESSION['cmis_link'] = array();
+	}
+	$cmis_link_session = & $_SESSION['cmis_link'];
+	
+	if(!isset($cmis_link_session['document'])){
+		$cmis_link_session['document'] = null;
+	}
+	$document = & $cmis_link_session['document'];
+	
+	$result = $document;
+	$document = null;
+	return drupal_json_output($result);
+	
+}
+
+function _cmis_link_document_select() {
+	module_load_include('api.inc', 'cmis');
+	
+	if(!isset($_SESSION['cmis_link'])){
+		$_SESSION['cmis_link'] = array();
+	}
+	$cmis_link_session = & $_SESSION['cmis_link'];
+	
+	if(!isset($cmis_link_session['document'])){
+		$cmis_link_session['document'] = null;
+	}
+	$document = & $cmis_link_session['document'];
+	
+	$repository = cmisapi_getRepositoryInfo();
+	$repositoryId = !empty($repository->repositoryId) ? $repository->repositoryId : 'default';
+	
+	$objectId = $_GET['id'];
+	$object = cmisapi_getObject($repositoryId,$objectId);
+	
+	
+	$document = array('id' => $object->id, 'name' => $object->properties['cmis:name'], );
+		
+	$result = $document;
+	$document = null;
+	return drupal_json_output($result);
+}
+function cmis_link_upload_form($form_state) {
+	// this function is currently not used
+	$form['#attributes']['enctype'] = 'multipart/form-data';
+	$form['actions']['content_upload']['file'] = array(
+			'#type' => 'file',
+			'#title' => t('Click the "Choose File" and the "Upload" buttons to upload a file into the current folder: ')
+	);
+
+	$form['actions']['content_upload']['content_upload_button'] = array(
+			'#type' => 'submit',
+			'#name' => 'content_upload_action',
+			'#value' => t('Upload')
+	);
+
+	return $form;
+}
+
+/**
+ * Implementation of hook_form_submit().
+ *
+ */
+function cmis_link_upload_form_submit($form, & $form_state) {
+	// this function is currently not used
+	module_load_include('content_create.inc', 'cmis_browser');
+	$path = rawurlencode('/' . implode('/', array_slice(explode('/', $_GET['q']), 2)));
+	switch($form_state['clicked_button']['#name']) {
+		case 'content_upload_action':
+			// @todo cleanup uploaded file
+			$file = file_save_upload('file');
+			if ($file) {
+				$file_stream = fopen($file->uri, 'r');
+				_cmis_browser_actions_content_create($path, $file->filename, $file_stream, $file->filemime);
+			}
+			else {
+				form_set_error('content_upload', t('Unable to handle uploaded file.'));
+			}
+			break;
+	}
+}
