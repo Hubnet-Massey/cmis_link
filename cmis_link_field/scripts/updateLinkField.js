@@ -35,8 +35,6 @@ jQuery(function($) {
 					var document_link = Drupal.settings.basePath + 'cmis/browser/?id=' + result.id.split(';')[0];
 					var document_name = result.name;
 					
-					console.log(result);
-					
 					document.getElementById("cmis-link-field-display-name").value = document_name;
 					document.getElementById("cmis-link-field-breadcrumbs").value = '<div id="library-breadcrumbs">' + breadcrumbs+'<div id="selected-file-name"><img typeof="foaf:Image" class="img-responsive" src="'+Drupal.settings.basePath+'sites/all/modules/cmis_link/images/next.gif" alt="">'+document_name+'</div></div>';
 					document.getElementById("cmis-link-field-document-path").value = document_path;
